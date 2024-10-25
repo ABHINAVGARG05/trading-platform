@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/ABHINAVGARG05/trading-platform/controllers"
 	"github.com/ABHINAVGARG05/trading-platform/database"
 	"github.com/ABHINAVGARG05/trading-platform/routes"
 
@@ -23,6 +24,7 @@ func main() {
 
     routes.Setup(app)
 
+    controllers.PriceTicker()
     port := os.Getenv("PORT")
     if port == "" {
         port = "3000"  // Set a default port if not provided

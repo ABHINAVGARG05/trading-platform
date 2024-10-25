@@ -34,7 +34,7 @@ func BuyStock(c *fiber.Ctx) error {
 
 	user.Balance -= cost
 	database.DB.Save(&user)
-
+	stock.Demand += req.Quantity
 	stock.Volume += req.Quantity
 	database.DB.Save(&stock)
 
@@ -45,6 +45,7 @@ func BuyStock(c *fiber.Ctx) error {
 		Quantity: req.Quantity,
 		Price:    stock.Price,
 	}
+	//PriceUpdater()
 	database.DB.Create(&order)
 
 	var portfolio models.Portfolio
@@ -96,7 +97,9 @@ func SellStock(c *fiber.Ctx) error {
 	user.Balance += earnings
 	database.DB.Save(&user)
 
+	stock.Supply += req.Quantity
 	stock.Volume -= req.Quantity
+	//PriceUpdater()
 	database.DB.Save(&stock)
 
 	order := models.Order{
