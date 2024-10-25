@@ -1,0 +1,42 @@
+# docker-compose.yml
+
+version: '3.8'
+services:
+  db:
+    image: postgres:13-alpine
+    container_name: trading-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: new_password
+      POSTGRES_DB: trading_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - trading-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trading-backend
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "host=db user=postgres password=new_password dbname=trading_platform port=5432 sslmode=disable"
+    volumes:
+      - .:/app   # Mount your local directory for live updates
+      - air-config:/app/tmp # Volume for air reload tmp files
+    depends_on:
+      - db
+    networks:
+      - trading-network
+
+volumes:
+  postgres_data:
+  air-config:
+
+networks:
+  trading-network:
+    driver: bridge

@@ -4,8 +4,8 @@ tmp_dir = "tmp"
 
 [build]
   args_bin = []
-  bin = "tmp\\main.exe"
-  cmd = "go build -o ./tmp/main.exe ."
+  bin = "tmp/main"  # Use Linux-style path and binary
+  cmd = "go build -o ./tmp/main ."  # Remove .exe for Linux
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []
