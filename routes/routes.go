@@ -11,4 +11,5 @@ func Setup(app *fiber.App){
 	api.Get("/stock/:id",controllers.GetStockById)
 	api.Post("/stock/buy",controllers.BuyStock)
 	api.Post("/stock/sell",controllers.SellStock)
+	api.Get("/user/:id",controllers.GetUserInfo)
 }

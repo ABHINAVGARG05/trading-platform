@@ -18,7 +18,7 @@ func GetAllStocks(c *fiber.Ctx) error{
 func GetStockById(c *fiber.Ctx)error{
 	id:= c.Params("id")
 	var stock models.Stock
-	result := database.DB.Find(id)
+	result := database.DB.Find(&stock,id)
 	if result.Error != nil{
 		return c.Status(500).SendString(result.Error.Error())
 	}

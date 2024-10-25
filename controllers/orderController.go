@@ -1,8 +1,10 @@
 package controllers
 
 import (
-	"github.com/ABHINAVGARG05/trading-platform/models"
+	"log"
+
 	"github.com/ABHINAVGARG05/trading-platform/database"
+	"github.com/ABHINAVGARG05/trading-platform/models"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -19,8 +21,9 @@ func BuyStock(c *fiber.Ctx) error {
 	var user models.User
 	var stock models.Stock
 	database.DB.First(&user, req.UserID)
-	database.DB.First(&stock, req, req.StockID)
-
+	database.DB.First(&stock, req.StockID)
+	log.Println(req.UserID)
+	log.Println(req.StockID)
 	if stock.ID == 0 {
 		return c.Status(400).SendString("Stock Not Found")
 	}
@@ -33,7 +36,7 @@ func BuyStock(c *fiber.Ctx) error {
 	database.DB.Save(&user)
 
 	stock.Volume += req.Quantity
-	database.DB.Save(&user)
+	database.DB.Save(&stock)
 
 	order := models.Order{
 		UserID:   req.UserID,
@@ -45,21 +48,22 @@ func BuyStock(c *fiber.Ctx) error {
 	database.DB.Create(&order)
 
 	var portfolio models.Portfolio
-	database.DB.Where("user_id = ? AND stock_id = ?", req.UserID, req.StockID).First(&portfolio)
-
-	if portfolio.ID == 0 {
-		portfolio = models.Portfolio{
-			UserID:   req.UserID,
-			StockID:  req.StockID,
-			Quantity: req.Quantity,
-			AvgPrice: stock.Price,
-		}
-		database.DB.Save(&portfolio)
-	} else {
+	if err := database.DB.Where("user_id = ? AND stock_id = ?", req.UserID, req.StockID).First(&portfolio).Error; err != nil {
+        // Portfolio doesn't exist; create a new one
+        portfolio = models.Portfolio{
+            UserID:   req.UserID,
+            StockID:  req.StockID,
+            Quantity: req.Quantity,
+            AvgPrice: stock.Price,
+        }
+        database.DB.Create(&portfolio)
+        log.Println("Portfolio created")
+    } else {
 		totalQuantity := portfolio.Quantity + req.Quantity
 		portfolio.AvgPrice = (portfolio.AvgPrice*float64(portfolio.Quantity) + stock.Price*float64(req.Quantity)) / float64(totalQuantity)
 		portfolio.Quantity += totalQuantity
 		database.DB.Save(&portfolio)
+		log.Println("portfolio updated")
 	}
 	return c.JSON(order)
 }
@@ -78,10 +82,12 @@ func SellStock(c *fiber.Ctx) error {
 	var stock models.Stock
 	var portfolio models.Portfolio
 
+	database.DB.First(&user, req.UserId)
+	database.DB.First(&stock, req.StockId)
 	if stock.ID == 0 {
 		return c.Status(400).SendString("Stock Not Found")
 	}
-
+	database.DB.Where("user_id = ? AND stock_id = ?", req.UserId, req.StockId).First(&portfolio)
 	if portfolio.Quantity == 0 || portfolio.Quantity < req.Quantity {
 		return c.Status(400).SendString("Insufficient Stock Quantity")
 	}
